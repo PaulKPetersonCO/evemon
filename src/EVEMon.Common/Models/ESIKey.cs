@@ -124,8 +124,8 @@ namespace EVEMon.Common.Models
         /// <summary>
         /// Gets the character identities for this API key.
         /// </summary>
-        public IEnumerable<CharacterIdentity> CharacterIdentities 
-            => EveMonClient.CharacterIdentities.Where(characterID => characterID.ESIKeys.Contains(this));
+        public IEnumerable<CharacterIdentity> CharacterIdentities => EveMonClient.
+            CharacterIdentities.Where(characterID => characterID.ESIKeys.Contains(this));
         
         /// <summary>
         /// Gets or sets a value indicating whether this <see cref="ESIKey"/> is monitored.
@@ -195,16 +195,16 @@ namespace EVEMon.Common.Models
         /// Updates the access token, or sets an error flag if the token could no longer be
         /// obtained.
         /// </summary>
-        private void OnAccessToken(JsonResult<AccessResponse> result)
+        /// <param name="response">The token response received from the server.</param>
+        private void OnAccessToken(AccessResponse response)
         {
-            AccessResponse response = result.Result;
             m_queried = true;
 
-            if (result.HasError)
+            if (response == null)
             {
                 // If it errors out, avoid checking again for another 5 minutes
                 m_keyExpires = DateTime.UtcNow.AddMinutes(5.0);
-                EveMonClient.Notifications.NotifySSOError(result);
+                EveMonClient.Notifications.NotifySSOError();
                 HasError = true;
                 m_queryPending = false;
                 EveMonClient.OnESIKeyInfoUpdated(this);
@@ -212,6 +212,8 @@ namespace EVEMon.Common.Models
             else
             {
                 AccessToken = response.AccessToken;
+                // PKCE routinely updates refresh tokens
+                RefreshToken = response.RefreshToken;
                 m_keyExpires = response.ExpiryUTC;
                 // Have to make a second request for the character information!
                 SSOAuthenticationService.GetTokenInfo(AccessToken, OnTokenInfo);

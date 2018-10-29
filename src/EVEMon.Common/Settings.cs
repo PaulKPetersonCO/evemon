@@ -22,7 +22,7 @@ using EVEMon.Common.SettingsObjects;
 namespace EVEMon.Common
 {
     /// <summary>
-    /// The settings class is bound 
+    /// Stores EVEMon's current settings and writes them to the settings file when necessary.
     /// </summary>
     [EnforceUIThreadAffinity]
     public static class Settings
@@ -426,7 +426,7 @@ namespace EVEMon.Common
         /// </returns>
         private static SerializableSettings TryDeserializeFromFileContent(string fileContent)
         {
-            if (String.IsNullOrWhiteSpace(fileContent))
+            if (string.IsNullOrWhiteSpace(fileContent))
                 return null;
 
             EveMonClient.Trace("begin");

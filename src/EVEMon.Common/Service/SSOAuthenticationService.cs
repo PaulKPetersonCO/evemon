@@ -1,13 +1,16 @@
 ﻿using EVEMon.Common.Constants;
 using EVEMon.Common.Extensions;
+using EVEMon.Common.Helpers;
 using EVEMon.Common.Net;
 using EVEMon.Common.Serialization;
 using EVEMon.Common.Serialization.Esi;
 using EVEMon.Common.Threading;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace EVEMon.Common.Service
@@ -29,7 +32,8 @@ namespace EVEMon.Common.Service
             SSOAuthenticationService authService;
 
             if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(secret))
-                authService = null;
+                authService = new SSOAuthenticationService(NetworkConstants.SSODefaultAppID,
+                    null, NetworkConstants.SSOScopes);
             else
                 authService = new SSOAuthenticationService(id, secret, NetworkConstants.
                     SSOScopes);
@@ -55,11 +59,16 @@ namespace EVEMon.Common.Service
                 callback?.Invoke(result.Result);
             }));
         }
-        
+
         /// <summary>
         /// The SSO client ID.
         /// </summary>
         private readonly string m_clientID;
+
+        /// <summary>
+        /// The Base-64 encoded challenge string for PKCE authentication.
+        /// </summary>
+        private readonly string m_codeChallenge;
 
         /// <summary>
         /// List of scopes that are to be used.
@@ -77,9 +86,11 @@ namespace EVEMon.Common.Service
                 throw new ArgumentNullException("clientID");
             if (string.IsNullOrEmpty(scopes))
                 throw new ArgumentNullException("scopes");
-            if (string.IsNullOrEmpty(secret))
-                throw new ArgumentNullException("secret");
             m_clientID = clientID;
+            var rnd = new RNGCryptoServiceProvider();
+            byte[] cc = new byte[32];
+            rnd.GetBytes(cc);
+            m_codeChallenge = Util.URLSafeBase64(cc);
             m_scopes = scopes;
             m_secret = secret;
         }
@@ -89,47 +100,39 @@ namespace EVEMon.Common.Service
         /// </summary>
         /// <param name="data">The POST data, either an auth code or a refresh token.</param>
         /// <param name="callback">A callback to receive the new token.</param>
-        private void FetchToken(string data, Action<JsonResult<AccessResponse>> callback)
+        /// <param name="isJWT">true if a JWT response is expected, or false if a straight JSON response is expected.</param>
+        private void FetchToken(string data, Action<AccessResponse> callback, bool isJWT)
         {
             var obtained = DateTime.UtcNow;
-            // URL is the same for both
-            var url = new Uri(NetworkConstants.SSOBase + NetworkConstants.SSOToken);
-            Util.DownloadJsonAsync<AccessResponse>(url, new RequestParams() {
-                Authentication = GetBasicAuthHeader(),
+            var url = new Uri(NetworkConstants.SSOBaseV2 + NetworkConstants.SSOToken);
+            var rp = new RequestParams()
+            {
                 Content = data,
                 Method = HttpMethod.Post
-            }).ContinueWith((result) =>
+            };
+            if (!string.IsNullOrEmpty(m_secret))
+                // Non-PKCE
+                rp.Authentication = GetBasicAuthHeader();
+            HttpWebClientService.DownloadStringAsync(url, rp).ContinueWith((result) =>
             {
-                var taskResult = result.Result;
-                if (taskResult != null && taskResult.Result != null)
-                    // Initialize time since the deserializer does not call the constructor
-                    taskResult.Result.Obtained = obtained;
-                Dispatcher.Invoke(() => callback?.Invoke(taskResult));
+                AccessResponse response = null;
+                DownloadResult<string> taskResult;
+                string encodedToken;
+                // It must be completed or failed if ContinueWith is reached
+                if (result.IsFaulted)
+                    ExceptionHandler.LogException(result.Exception, true);
+                else if ((taskResult = result.Result) != null)
+                {
+                    // Log HTTP error if it occurred
+                    if (taskResult.Error != null)
+                        ExceptionHandler.LogException(taskResult.Error, true);
+                    else if (!string.IsNullOrEmpty(encodedToken = taskResult.Result))
+                        // For some reason the JWT token is not returned according to the ESI
+                        // spec
+                        response = TokenFromString(encodedToken, false, obtained);
+                }
+                Dispatcher.Invoke(() => callback?.Invoke(response));
             });
-        }
-
-        /// <summary>
-        /// Starts obtaining a new access token from the refresh token.
-        /// </summary>
-        /// <param name="refreshToken">The refresh token.</param>
-        /// <param name="callback">A callback to receive the new token.</param>
-        public void GetNewToken(string refreshToken, Action<JsonResult<AccessResponse>> callback)
-        {
-            refreshToken.ThrowIfNull(nameof(refreshToken));
-            FetchToken(string.Format(NetworkConstants.PostDataWithRefreshToken, WebUtility.
-                UrlEncode(refreshToken)), callback);
-        }
-
-        /// <summary>
-        /// Starts verifying the authentication code.
-        /// </summary>
-        /// <param name="authCode">The code to verify.</param>
-        /// <param name="callback">A callback to receive the tokens.</param>
-        public void VerifyAuthCode(string authCode, Action<JsonResult<AccessResponse>> callback)
-        {
-            authCode.ThrowIfNull(nameof(authCode));
-            FetchToken(string.Format(NetworkConstants.PostDataWithAuthToken, WebUtility.
-                UrlEncode(authCode)), callback);
         }
 
         /// <summary>
@@ -141,7 +144,46 @@ namespace EVEMon.Common.Service
             return "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(m_clientID +
                 ":" + m_secret));
         }
-        
+
+        /// <summary>
+        /// Starts obtaining a new access token from the refresh token.
+        /// </summary>
+        /// <param name="refreshToken">The refresh token.</param>
+        /// <param name="callback">A callback to receive the new token.</param>
+        public void GetNewToken(string refreshToken, Action<AccessResponse> callback)
+        {
+            refreshToken.ThrowIfNull(nameof(refreshToken));
+            string data;
+            if (string.IsNullOrEmpty(m_secret))
+                // PKCE
+                data = string.Format(NetworkConstants.PostDataRefreshPKCE, WebUtility.
+                    UrlEncode(refreshToken), m_clientID);
+            else
+                data = string.Format(NetworkConstants.PostDataRefreshToken, WebUtility.
+                    UrlEncode(refreshToken));
+            FetchToken(data, callback, false);
+        }
+
+        /// <summary>
+        /// Starts verifying the authentication code.
+        /// </summary>
+        /// <param name="authCode">The code to verify.</param>
+        /// <param name="callback">A callback to receive the tokens.</param>
+        public void VerifyAuthCode(string authCode, Action<AccessResponse> callback)
+        {
+            authCode.ThrowIfNull(nameof(authCode));
+            bool isPKCE = string.IsNullOrEmpty(m_secret);
+            string data;
+            if (isPKCE)
+                // PKCE
+                data = string.Format(NetworkConstants.PostDataAuthPKCE, WebUtility.UrlEncode(
+                    authCode), m_clientID, m_codeChallenge);
+            else
+                data = string.Format(NetworkConstants.PostDataAuthToken, WebUtility.
+                    UrlEncode(authCode));
+            FetchToken(data, callback, isPKCE);
+        }
+
         /// <summary>
         /// Spawns a browser for the user to log in; the port is the location of the local
         /// web server which receives the response, the state is used to stop XSRF
@@ -152,9 +194,60 @@ namespace EVEMon.Common.Service
         public void SpawnBrowserForLogin(string state, int port)
         {
             string redirect = string.Format(NetworkConstants.SSORedirect, port);
-            string url = string.Format(NetworkConstants.SSOBase + NetworkConstants.SSOLogin,
-                WebUtility.UrlEncode(redirect), state, m_scopes, m_clientID);
-            Util.OpenURL(new Uri(url));
+            string url;
+            if (string.IsNullOrEmpty(m_secret))
+                // PKCE
+                url = string.Format(NetworkConstants.SSOLoginPKCE, WebUtility.UrlEncode(
+                    redirect), state, m_scopes, m_clientID, Util.SHA256Base64(Encoding.ASCII.
+                    GetBytes(m_codeChallenge)));
+            else
+                url = string.Format(NetworkConstants.SSOLogin, WebUtility.UrlEncode(redirect),
+                    state, m_scopes, m_clientID);
+            Util.OpenURL(new Uri(NetworkConstants.SSOBaseV2 + url));
+        }
+
+        /// <summary>
+        /// Creates a token from a JWT or regular access response.
+        /// </summary>
+        /// <param name="data">The token data from the server.</param>
+        /// <param name="isJWT">true if a JWT response is expected, or false if a straight JSON response is expected.</param>
+        /// <param name="obtained">The time when this token was first obtained</param>
+        /// <returns>The token, or null if none could be parsed.</returns>
+        private AccessResponse TokenFromString(string data, bool isJWT, DateTime obtained)
+        {
+            AccessResponse response = null;
+            if (isJWT)
+            {
+                JwtSecurityToken token;
+                try
+                {
+                    token = new JwtSecurityToken(data);
+                }
+                catch (ArgumentException e)
+                {
+                    // JwtSecurityToken constructor throws this exception if the token is
+                    // invalid
+                    ExceptionHandler.LogException(e, true);
+                    token = null;
+                }
+                if (token != null)
+                {
+                    var intendedURI = new Uri(NetworkConstants.SSOBaseV2);
+                    string issuer = token.Issuer;
+                    // Validate ISSuer
+                    if (issuer == intendedURI.Host || issuer == intendedURI.GetLeftPart(
+                            UriPartial.Authority))
+                        response = Util.DeserializeJson<AccessResponse>(token.RawPayload);
+                    else
+                        EveMonClient.Trace("Rejecting invalid SSO token issuer: " + issuer);
+                }
+            }
+            else
+                response = Util.DeserializeJson<AccessResponse>(data);
+            if (response != null)
+                // Initialize time since deserializer does not call the constructor
+                response.Obtained = obtained;
+            return response;
         }
     }
 
@@ -166,10 +259,13 @@ namespace EVEMon.Common.Service
     {
         [DataMember(Name = "access_token")]
         public string AccessToken { get; set; }
+
         [DataMember(Name = "refresh_token")]
         public string RefreshToken { get; set; }
+
         [DataMember(Name = "expires_in")]
         private int ExpiresIn { get; set; }
+
         [IgnoreDataMember]
         public DateTime ExpiryUTC
         {
@@ -178,6 +274,7 @@ namespace EVEMon.Common.Service
                 return Obtained + TimeSpan.FromSeconds(ExpiresIn);
             }
         }
+
         // This is apparently not set when deserialized, added a method to initialize it
         [IgnoreDataMember]
         public DateTime Obtained { get; set; }

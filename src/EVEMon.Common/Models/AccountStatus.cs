@@ -6,7 +6,8 @@ namespace EVEMon.Common.Models
     {
         public enum AccountStatusType { Unknown, Alpha, Omega };
         
-        private const float trainingRateUnknown = 1.0f;
+        // pessimist mode on.
+        private const float trainingRateUnknown = 0.5f;
         private const float trainingRateAlpha = 0.5f;
         private const float trainingRateOmega = 1.0f;
 
@@ -18,7 +19,7 @@ namespace EVEMon.Common.Models
         {
             CurrentStatus = statusType;
         }
-        
+
         /// <summary>
         /// Spits out a friendly name for the Account Status
         /// </summary>
@@ -45,6 +46,14 @@ namespace EVEMon.Common.Models
         }
 
         public AccountStatusType CurrentStatus { get; private set; }
+
+        public bool IsAlpha
+        {
+            get
+            {
+                return CurrentStatus == AccountStatusType.Alpha;
+            }
+        }
 
         /// <summary>
         /// Returns training rate adjusted for account status
