@@ -1,11 +1,11 @@
 ﻿using EVEMon.Common.Enumerations;
 using EVEMon.Common.Extensions;
 using EVEMon.Common.Models;
+using EVEMon.Common.Net;
 using EVEMon.Common.Notifications;
 using EVEMon.Common.Serialization;
 using EVEMon.Common.Serialization.Esi;
 using EVEMon.Common.Serialization.Eve;
-using EVEMon.Common.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -128,8 +128,7 @@ namespace EVEMon.Common.Collections.Global
         /// <summary>
         /// Notifies an SSO sign-in error.
         /// </summary>
-        /// <param name="result">The result.</param>
-        internal void NotifySSOError(JsonResult<AccessResponse> result)
+        internal void NotifySSOError()
         {
             var notification = new NotificationEventArgs(null, NotificationCategory.
                 QueryingError)
@@ -1127,13 +1126,13 @@ namespace EVEMon.Common.Collections.Global
         #endregion
 
 
-        #region Skill queue less than a day
+        #region Skill queue less than threshold
 
         /// <summary>
         /// Invalidates the notification for skill queue availability.
         /// </summary>
         /// <param name="character">The character.</param>
-        internal void InvalidateSkillQueueLessThanADay(CCPCharacter character)
+        internal void InvalidateSkillQueueThreshold(CCPCharacter character)
         {
             Invalidate(new NotificationInvalidationEventArgs(character, NotificationCategory.
                 SkillQueueRoomAvailable));
@@ -1143,13 +1142,19 @@ namespace EVEMon.Common.Collections.Global
         /// Notify when we have room to queue more skills.
         /// </summary>
         /// <param name="character">The character.</param>
-        internal void NotifySkillQueueLessThanADay(CCPCharacter character)
+        /// <param name="threshold">The number of days to which the warning is set.</param>
+        internal void NotifySkillQueueThreshold(CCPCharacter character, int threshold)
         {
+            string text, name = character?.Name;
+            if (threshold == 1)
+                text = "a";
+            else
+                text = threshold.ToString();
             var notification = new NotificationEventArgs(character, NotificationCategory.
                 SkillQueueRoomAvailable)
             {
                 Description = string.Format(Properties.Resources.MessageLessThanDay,
-                    character?.Name),
+                    character?.Name, text, threshold.S()),
                 Behaviour = NotificationBehaviour.Overwrite,
                 Priority = NotificationPriority.Warning
             };
