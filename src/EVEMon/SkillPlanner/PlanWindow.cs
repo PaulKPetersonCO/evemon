@@ -484,7 +484,7 @@ namespace EVEMon.SkillPlanner
             ship.ThrowIfNull(nameof(ship));
 
             // Quit if it's an "Unknown" item
-            if (ship.ID == Int32.MaxValue)
+            if (ship.ID == int.MaxValue)
                 return;
 
             ShowShipBrowser();
@@ -509,7 +509,7 @@ namespace EVEMon.SkillPlanner
             item.ThrowIfNull(nameof(item));
 
             // Quit if it's an "Unknown" item
-            if (item.ID == Int32.MaxValue)
+            if (item.ID == int.MaxValue)
                 return;
 
             ShowItemBrowser();
@@ -534,7 +534,7 @@ namespace EVEMon.SkillPlanner
             blueprint.ThrowIfNull(nameof(blueprint));
 
             // Quit if it's an "Unknown" item
-            if (blueprint.ID == Int32.MaxValue)
+            if (blueprint.ID == int.MaxValue)
                 return;
 
             ShowBlueprintBrowser();
@@ -787,15 +787,15 @@ namespace EVEMon.SkillPlanner
 
             if (skillPoints > 0)
             {
-                SkillPointsStatusLabel.ToolTipText = $"{skillPoints:N0} skill points required to train " +
+                SkillPointsStatusLabel.ToolTipText =
+                    $"{skillPoints:N0} skill points required to train " +
                     (selected ? "selected" : "all") + $" skill{skillCount.S()}";
             }
 
-            int skillInjectorsCount = m_plan.Character.GetRequiredSkillInjectorsForSkillPoints(
+            var skillInjectorsCount = m_plan.Character.GetRequiredSkillInjectorsForSkillPoints(
                 skillPoints);
-            SkillPointsStatusLabel.Text = skillPoints > 0 ?
-                $"{skillPoints:N0} SP required ({skillInjectorsCount:N0} Skill Injector" +
-                skillInjectorsCount.S() : "0 SP required";
+            SkillPointsStatusLabel.Text = skillPoints <= 0 ? "No SP required" :
+                $"{skillPoints:N0} SP required ({skillInjectorsCount.ToString()})";
         }
 
         /// <summary>
