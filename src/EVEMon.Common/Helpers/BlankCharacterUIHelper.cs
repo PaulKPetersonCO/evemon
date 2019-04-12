@@ -24,8 +24,8 @@ namespace EVEMon.Common.Helpers
 
         private static readonly Dictionary<int, int> s_allRaceSkills = new Dictionary<int, int>
         {
-            { DBConstants.HullUpgradesSkillID, 2 },
-            { DBConstants.MechanicSkillID, 2 },
+            { DBConstants.HullUpgradesSkillID, 3 },
+            { DBConstants.MechanicSkillID, 3 },
             { DBConstants.RepairSystemsSkillID, 1 },
             { DBConstants.DroneAvionicsSkillID, 1 },
             { DBConstants.DronesSkillID, 1 },
@@ -42,12 +42,11 @@ namespace EVEMon.Common.Helpers
             { DBConstants.ControlledBurstsSkillID, 2 },
             { DBConstants.GunnerySkillID, 4 },
             { DBConstants.MotionPredictionSkillID, 2 },
-            { DBConstants.RapidFiringSkillID, 3 },
-            { DBConstants.SharpshooterSkillID, 3 },
+            { DBConstants.RapidFiringSkillID, 2 },
+            { DBConstants.SharpshooterSkillID, 2 },
             { DBConstants.SurgicalStrikeSkillID, 1 },
             { DBConstants.TrajectoryAnalysisSkillID, 1 },
             { DBConstants.MissileLauncherOperationSkillID, 1 },
-            { DBConstants.AccelerationControlSkillID, 1 },
             { DBConstants.AfterburnerSkillID, 3 },
             { DBConstants.EvasiveManeuveringSkillID, 1 },
             { DBConstants.HighSpeedManeuveringSkillID, 1 },
@@ -64,10 +63,9 @@ namespace EVEMon.Common.Helpers
             { DBConstants.HackingSkillID, 1 },
             { DBConstants.SurveySkillID, 3 },
             { DBConstants.ScienceSkillID, 4 },
-            { DBConstants.ShieldManagementSkillID, 2 },
-            { DBConstants.ShieldOperationSkillID, 3 },
-            { DBConstants.ShieldUpgradesSkillID, 2 },
-            { DBConstants.TacticalShieldManipulationSkillID, 2 },
+            { DBConstants.ShieldManagementSkillID, 1 },
+            { DBConstants.ShieldUpgradesSkillID, 1 },
+            { DBConstants.TacticalShieldManipulationSkillID, 1 },
             { DBConstants.MiningFrigateSkillID, 1 },
             { DBConstants.SpaceshipCommandSkillID, 3 },
             { DBConstants.LongRangeTargetingSkillID, 1 },
@@ -78,29 +76,25 @@ namespace EVEMon.Common.Helpers
 
         private static readonly Dictionary<int, int> s_amarrRaceSkills = new Dictionary<int, int>
         {
-            { DBConstants.SmallEnergyTurretSkillID, 1 },
-            { DBConstants.AmarrFrigateSkillID, 1 },
+            // { DBConstants.SmallEnergyTurretSkillID, 1 },
             { DBConstants.AmarrIndustrialSkillID, 1 }
        };
 
         private static readonly Dictionary<int, int> s_caldariRaceSkills = new Dictionary<int, int>
         {
-            { DBConstants.SmallHybridTurretSkillID, 1 },
-            { DBConstants.CaldariFrigateSkillID, 1 },
+            // { DBConstants.SmallHybridTurretSkillID, 1 },
             { DBConstants.CaldariIndustrialSkillID, 1 }
         };
 
         private static readonly Dictionary<int, int> s_gallenteRaceSkills = new Dictionary<int, int>
         {
-            { DBConstants.SmallHybridTurretSkillID, 1 },
-            { DBConstants.GallenteFrigateSkillID, 1 },
+            // { DBConstants.SmallHybridTurretSkillID, 1 },
             { DBConstants.GallenteIndustrialSkillID, 1 }
         };
 
         private static readonly Dictionary<int, int> s_minmatarRaceSkills = new Dictionary<int, int>
         {
-            { DBConstants.SmallProjectileTurretSkillID, 1 },
-            { DBConstants.MinmatarFrigateSkillID, 1 },
+            // { DBConstants.SmallProjectileTurretSkillID, 1 },
             { DBConstants.MinmatarIndustrialSkillID, 1 }
         };
 
@@ -162,7 +156,7 @@ namespace EVEMon.Common.Helpers
         /// <returns></returns>
         private static SerializableCCPCharacter CreateCharacter()
         {
-            SerializableCCPCharacter serial = new SerializableCCPCharacter
+            var serial = new SerializableCCPCharacter
             {
                 ID = UriCharacter.BlankCharacterID,
                 Name = CharacterName,
@@ -174,17 +168,15 @@ namespace EVEMon.Common.Helpers
                 CorporationName = "Blank Character's Corp",
                 CorporationID = 9999999,
                 Balance = 0,
+                // Default to Omega clones
+                CloneState = AccountStatusMode.Omega.ToString(),
                 Attributes = new SerializableCharacterAttributes
                 {
-                    Intelligence =
-                        EveConstants.CharacterBaseAttributePoints + 3,
+                    Intelligence = EveConstants.CharacterBaseAttributePoints + 3,
                     Memory = EveConstants.CharacterBaseAttributePoints + 3,
-                    Perception =
-                        EveConstants.CharacterBaseAttributePoints + 3,
-                    Willpower =
-                        EveConstants.CharacterBaseAttributePoints + 3,
-                    Charisma =
-                        EveConstants.CharacterBaseAttributePoints + 2
+                    Perception = EveConstants.CharacterBaseAttributePoints + 3,
+                    Willpower = EveConstants.CharacterBaseAttributePoints + 3,
+                    Charisma = EveConstants.CharacterBaseAttributePoints + 2
                 },
                 ImplantSets = new SerializableImplantSetCollection
                 {
