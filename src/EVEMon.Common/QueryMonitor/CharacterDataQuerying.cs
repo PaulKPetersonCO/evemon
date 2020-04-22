@@ -33,6 +33,8 @@ namespace EVEMon.Common.QueryMonitor
         // Result from the character skill queue to handle a pathological case where skill
         // queues were not-modified but need to be re-imported due to a skills list change
         private EsiAPISkillQueue m_lastQueue;
+        // Responses from the market order history results since we handle it manually
+        private ResponseParams m_orderHistoryResponse;
 
         #endregion
 
@@ -49,6 +51,7 @@ namespace EVEMon.Common.QueryMonitor
             m_ccpCharacter = ccpCharacter;
             m_characterQueryMonitors = new List<IQueryMonitorEx>();
             m_attrResponse = null;
+            m_orderHistoryResponse = null;
             m_lastQueue = null;
 
             // Add the monitors in an order as they will appear in the throbber menu
@@ -511,20 +514,67 @@ namespace EVEMon.Common.QueryMonitor
         }
 
         /// <summary>
-        /// Processes the queried character's market orders.
+        /// Processes the queried character's market orders. Called from the history fetch on
+        /// success or failure, but merges the original orders too.
         /// </summary>
         /// <param name="result"></param>
         /// <remarks>This method is sensitive to which "issued for" orders gets queried first</remarks>
+        private void OnMarketOrdersCompleted(EsiResult<EsiAPIMarketOrders> result,
+            object regularOrders)
+        {
+            var target = m_ccpCharacter;
+            // Character may have been deleted since we queried
+            if (target != null && regularOrders is EsiAPIMarketOrders orders)
+            {
+                var endedOrders = new LinkedList<MarketOrder>();
+                var allOrders = new EsiAPIMarketOrders();
+                m_orderHistoryResponse = result.Response;
+                // Ignore the If-Modified-Since and cache timer on order history to ensure
+                // that old orders are not wiped out
+                if (m_orderHistoryResponse != null)
+                {
+                    m_orderHistoryResponse.Expires = null;
+                    m_orderHistoryResponse.ETag = null;
+                }
+                // Add normal orders first
+                if (orders != null)
+                    allOrders.AddRange(orders);
+                // Add result second
+                if (result != null && !result.HasError && result.Result != null)
+                    allOrders.AddRange(result.Result);
+                allOrders.SetAllIssuedBy(target.CharacterID);
+                target.CharacterMarketOrders.Import(allOrders, IssuedFor.Character,
+                    endedOrders);
+                EveMonClient.OnCharacterMarketOrdersUpdated(target, endedOrders);
+                allOrders.Clear();
+                // Notify if either one failed
+                if (result != null && result.HasError)
+                    EveMonClient.Notifications.NotifyCharacterMarketOrdersError(target,
+                        result);
+            }
+        }
+
+        /// <summary>
+        /// Queries the character's historical market orders. The orders get imported even if
+        /// fetching the historical orders fail.
+        /// </summary>
         private void OnMarketOrdersUpdated(EsiAPIMarketOrders result)
         {
             var target = m_ccpCharacter;
             // Character may have been deleted since we queried
             if (target != null)
             {
-                var endedOrders = new LinkedList<MarketOrder>();
-                result.SetAllIssuedBy(target.CharacterID);
-                target.CharacterMarketOrders.Import(result, IssuedFor.Character, endedOrders);
-                EveMonClient.OnCharacterMarketOrdersUpdated(target, endedOrders);
+                var esiKey = target.Identity.FindAPIKeyWithAccess(ESIAPICharacterMethods.
+                    MarketOrders);
+                if (esiKey != null && !EsiErrors.IsErrorCountExceeded)
+                    EveMonClient.APIProviders.CurrentProvider.QueryEsi<EsiAPIMarketOrders>(
+                        ESIAPICharacterMethods.MarketOrdersHistory, OnMarketOrdersCompleted,
+                        new ESIParams(m_orderHistoryResponse, esiKey.AccessToken)
+                        {
+                            ParamOne = target.CharacterID
+                        }, result);
+                else
+                    OnMarketOrdersCompleted(null, result);
             }
         }
 

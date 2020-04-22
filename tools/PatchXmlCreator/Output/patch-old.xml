@@ -1,108 +1,115 @@
 ﻿<?xml version="1.0"?>
 <evemon xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <newest>
-    <date>11 September 2019</date>
-    <version>4.0.14.4953</version>
-    <md5>e2f8e72a423ae67cb21c1190a195eedc</md5>
-    <url>https://forums.eveonline.com/t/evemon-4-0-14-esi-edition/75953</url>
-    <autopatchurl>https://github.com/peterhaneve/evemon/releases/download/4.0.14/EVEMon-install-4.0.14.exe</autopatchurl>
+    <date>02 February 2020</date>
+    <version>4.0.15.4962</version>
+    <md5>4668daf8c222c949f080c785bddcb319</md5>
+    <url>https://forums.eveonline.com/t/evemon-4-0-15-beta-under-new-ownership-conversion-for-esi/75953</url>
+    <autopatchurl>https://github.com/peterhaneve/evemon/releases/download/4.0.15/EVEMon-install-4.0.15.exe</autopatchurl>
     <autopatchargs>/S /AUTORUN /SKIPDOTNET</autopatchargs>
     <additionalargs>/D=%EVEMON_EXECUTABLE_PATH%</additionalargs>
-    <message><![CDATA[# Release v4.0.14
+    <message><![CDATA[# Release v4.0.15
 
 ## Bug Fixes
-- Reaction jobs with undocumented ESI change are now shown properly in the UI
-- Skills for blank character creator updated
-- Alpha clone status now affects display fields such as maximum market orders
+- Reduce spurious errors from querying corporation endpoints where the character does not have roles
+- Character LP list is now sorted descending by name
+- Notifications can now be closed by right clicking
+- Market order completed or expired notifications now appear again
 
 ## Contributors
 - Peter Han
-- OperatorOverload]]></message>
+- hollo6
+- corsair75
+- wvdvegt]]></message>
   </newest>
   <releases>
     <release>
-      <date>11 September 2019</date>
-      <version>4.0.14.4953</version>
-      <md5>e2f8e72a423ae67cb21c1190a195eedc</md5>
-      <url>https://forums.eveonline.com/t/evemon-4-0-14-esi-edition/75953</url>
-      <autopatchurl>https://github.com/peterhaneve/evemon/releases/download/4.0.14/EVEMon-install-4.0.14.exe</autopatchurl>
+      <date>14 April 2020</date>
+      <version>4.0.16.4965</version>
+      <md5>060f0ed5e13e67ee3039a0a86f4bcd7e</md5>
+      <url>https://forums.eveonline.com/t/evemon-4-0-16-beta-under-new-ownership-conversion-for-esi/75953</url>
+      <autopatchurl>https://github.com/peterhaneve/evemon/releases/download/4.0.16/EVEMon-install-4.0.16.exe</autopatchurl>
       <autopatchargs>/S /AUTORUN /SKIPDOTNET</autopatchargs>
       <additionalargs>/D=%EVEMON_EXECUTABLE_PATH%</additionalargs>
-      <message><![CDATA[# Release v4.0.14
+      <message><![CDATA[# Release v4.0.16
 
 ## Bug Fixes
-- Reaction jobs with undocumented ESI change are now shown properly in the UI
-- Skills for blank character creator updated
-- Alpha clone status now affects display fields such as maximum market orders
+- Assets ESI endpoint updated
+- Expired or completed market orders will be visible in most cases in the notification window
+- Reactions count calculates using the correct skill
+- Hotmail SMTP server updated for skill completed notifications
 
 ## Contributors
 - Peter Han
-- OperatorOverload]]></message>
+- jamesemullican
+- poundjd
+- Wodin73
+- hollo6]]></message>
     </release>
   </releases>
   <datafiles>
     <datafile>
       <name>eve-blueprints-en-US.xml.gzip</name>
-      <date>05 December 2019</date>
-      <md5>3f663a40aae0b2cc2661b01ca28bbdbc</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) blueprints data file by the EVEMon Development Team
+      <date>14 April 2020</date>
+      <md5>21cc8962245f516b92ea59c05e0e8818</md5>
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) blueprints data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-certificates-en-US.xml.gzip</name>
       <date>05 June 2018</date>
       <md5>540000f7c111354769a54fa31e57d411</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) certificates data file by the EVEMon Development Team
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) certificates data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-geography-en-US.xml.gzip</name>
-      <date>05 December 2019</date>
-      <md5>f1a27c1726f1db86b94765b60d876f4e</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) geography data file by the EVEMon Development Team
+      <date>14 April 2020</date>
+      <md5>371b2da08fe6b5612acde5d4ba155380</md5>
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) geography data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-items-en-US.xml.gzip</name>
-      <date>05 December 2019</date>
-      <md5>02e0a1929ae7d1d6df0b078d035b1999</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) items data file by the EVEMon Development Team
+      <date>14 April 2020</date>
+      <md5>0a5716a97be7cf852132891170664b17</md5>
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) items data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-masteries-en-US.xml.gzip</name>
       <date>05 June 2018</date>
       <md5>3668b50996fc40a0c0853fec427b5712</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) masteries data file by the EVEMon Development Team
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) masteries data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-properties-en-US.xml.gzip</name>
-      <date>05 December 2019</date>
-      <md5>96b0a5f9d1d9d9124ee32287942003cb</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) properties data file by the EVEMon Development Team
+      <date>14 April 2020</date>
+      <md5>2bb5ea3e65c6d7856617873f927f82ef</md5>
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) properties data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-reprocessing-en-US.xml.gzip</name>
-      <date>05 December 2019</date>
-      <md5>99bf1f9994fd3af214974c98e5a00af3</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) reprocessing data file by the EVEMon Development Team
+      <date>14 April 2020</date>
+      <md5>a44148c3b6231653e235fdf62ddeb4df</md5>
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) reprocessing data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
     <datafile>
       <name>eve-skills-en-US.xml.gzip</name>
-      <date>05 December 2019</date>
-      <md5>04fea23bb897937082e547c3a11532c1</md5>
-      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1602194</url>
-      <message><![CDATA[Invasion 1.4 (1602194) skills data file by the EVEMon Development Team
+      <date>14 April 2020</date>
+      <md5>ce4ed98174a6bd48e22adb6d82ab6ed7</md5>
+      <url>https://peterhaneve.github.io/evemon-datafiles/Invasion/1704507</url>
+      <message><![CDATA[Invasion 1.6 (1704507) skills data file by the EVEMon Development Team
 NOT COMPATIBLE with EVEMon prior to version 2.2.0]]></message>
     </datafile>
   </datafiles>
